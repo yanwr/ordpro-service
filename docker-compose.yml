@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: service_ordpro
+    build: .
+    depends_on:
+      - database
+    tty: true
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/app
+    networks:
+      - ordpro
+
+  database:
+    image: postgres
+    container_name: database
+    restart: always
+    tty: true
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pgdata:/var/lib/postgres/data
+      - ./resource/create-table.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - ./resource/fill-data.sql:/docker-entrypoint-initdb.d/fill_tables.sql
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=ordpro_db
+    networks:
+      - ordpro
+
+  pgadmin:
+    image: dpage/pgadmin4
+    tty: true
+    depends_on:
+      - database
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=123456
+    ports:
+      - "9000:80"
+    networks:
+      - ordpro
+
+networks:
+  ordpro:
+    driver: bridge
